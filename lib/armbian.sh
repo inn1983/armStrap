@@ -161,7 +161,7 @@ function chrootDPKG {
   
   printStatus "chrootDPKG" "Installing package ${TMP_DEB} in `basename ${TMP_CHROOT}`"
   cp -v ${2} ${TMP_DIR}/${TMP_DEB} >> ${ARMSTRAP_LOG_FILE} 2>&1
-  LC_ALL="" LANGUAGE="${BOARD_LANGUAGE}" LANG="${BOARD_LANG}" chroot ${TMP_CHROOT}/ /usr/bin/dpkg -i /${TMP_CHR}/${TMP_DEB} >> ${ARMSTRAP_LOG_FILE} 2>&1
+  LC_ALL="" LANGUAGE="${BOARD_LANGUAGE}" LANG="${BOARD_LANG}" chroot ${TMP_CHROOT}/ /usr/bin/dpkg --force-confnew -i /${TMP_CHR}/${TMP_DEB} >> ${ARMSTRAP_LOG_FILE} 2>&1
   rm -rf ${TMP_DIR}
     
   umountPFS "${TMP_CHROOT}"
