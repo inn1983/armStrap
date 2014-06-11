@@ -141,8 +141,8 @@ function chrootInstall {
   mountPFS "${TMP_CHROOT}"
   
   printStatus "chrootInstall" "Installing packages in `basename ${TMP_CHROOT}`"
-  LC_ALL="" LANGUAGE="${BOARD_LANGUAGE}" LANG="${BOARD_LANG}" chroot ${TMP_CHROOT}/ /usr/bin/apt-get -q -y -o APT::Install-Recommends=true -o APT::Get::AutomaticRemove=true install ${@} >> ${ARMSTRAP_LOG_FILE} 2>&1
-    
+  LC_ALL="" LANGUAGE="${BOARD_LANGUAGE}" LANG="${BOARD_LANG}" chroot ${TMP_CHROOT}/ /usr/bin/apt-get -q -y -o APT::Install-Recommends=true -o APT::Get::AutomaticRemove=true install ${@} libusb-1.0-0 >> ${ARMSTRAP_LOG_FILE} 2>&1
+  
   umountPFS "${TMP_CHROOT}"
   removeQEMU "${TMP_CHROOT}"
   enableServices "${TMP_CHROOT}"
@@ -311,6 +311,29 @@ function chrootTimeZone {
   else
     printStatus "chrootTimeZone" "WARNING: Invalid timezone ${TMP_TZ}"
   fi
+}
+
+function chrootSource {
+  local TMP_CHROOT="${1}"
+  shift
+  shift
+  
+  disableServices "${TMP_CHROOT}"
+  installQEMU "${TMP_CHROOT}"
+  mountPFS "${TMP_CHROOT}"
+  printStatus "chrootSource" "Setting Source.list"
+  cat > ${TMP_CHROOT}/etc/apt/sources.list <<END
+  deb http://ftp.debian.org/debian/ wheezy main contrib non-free
+  deb-src http://ftp.debian.org/debian/ wheezy main contrib non-free
+  deb http://security.debian.org/ wheezy/updates main contrib non-free
+  deb http://packages.cubian.org/ wheezy main
+END
+  
+  umountPFS "${TMP_CHROOT}"
+  removeQEMU "${TMP_CHROOT}"
+  enableServices "${TMP_CHROOT}"
+
+
 }
 
 # Usage : setHostName <ARMSTRAP_ROOT> <HOSTNAME>
@@ -545,6 +568,9 @@ function default_installRoot {
   chrootTimeZone "${ARMSTRAP_MNT}" "${BOARD_TIMEZONE}"
   
   setHostName "${ARMSTRAP_MNT}" "${ARMSTRAP_HOSTNAME}"
+  
+  ARMSTRAP_GUI_PCT=$(guiWriter "add"  1 "Setting Sources.list")
+  chrootSource "${ARMSTRAP_MNT}"
   
   ARMSTRAP_GUI_PCT=$(guiWriter "add"  1 "Updating RootFS")
   chrootUpgrade "${ARMSTRAP_MNT}"
